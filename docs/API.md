@@ -104,6 +104,7 @@
   "msg": "success",
   "success": true,
   "data": {
+    "id": "device-00000000-0000-0000-0000-000000000000",
     "name": "zxlee-macbook",
     "type": "computer",
     "platform": "macos",
@@ -130,7 +131,8 @@
   "success": true,
   "data": {
     "online": true,
-    "timestamp": 1721000000000
+    "timestamp": 1721000000000,
+    "deviceId": "device-00000000-0000-0000-0000-000000000000"
   }
 }
 ```
@@ -145,7 +147,7 @@
 ```json
 {
   "device": {
-    "id": "device-client-123",
+    "id": "device-00000000-0000-0000-0000-000000000000",
     "name": "iPhone",
     "type": "smartphone",
     "platform": "ios",
@@ -165,7 +167,7 @@
   "data": {
     "accepted": true,
     "device": {
-      "id": "device-host-456",
+      "id": "device-00000000-0000-0000-0000-000000000000",
       "name": "MacBook",
       "type": "computer",
       "platform": "macos",
