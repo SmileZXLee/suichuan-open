@@ -81,16 +81,14 @@
 ### 传输与安全握手流程
 
 ```
- 传输握手与安全信道建立流程（Handshake Flow）
+ 局域网 HTTP API / UDP 探针与安全握手架构（HTTP API & UDP Probe）
  ──────────────────────────────────────────────────────────
- Step 1: UDP Multicast Discovery   — 局域网广播组播，互相识别节点信息
- Step 2: Key Exchange (RSA / AES)  — 密钥协商握手
-           AsymmetricKey:    "RSA-OAEP"
-           SessionCipher:    "AES_256_GCM"
-           SecurityCheck:    "SHA256_HASH_VALIDATED"
- Step 3: Secure WebSocket Session  — 物理信道协商完成，加密套接字建立
- // [SUCCESS] P2P channel established safely.
+ Step 1: UDP / HTTP 254 并发探针   — 局域网探针自动识别节点（统一返回 service: "suichuan"）
+ Step 2: POST /api/v1/pair 配对交换  — 弹窗授权确认并交换 X25519 公钥与全局 deviceId
+ Step 3: AES-256-GCM 端到端加密     — 建立 E2E 安全信道，进行消息、剪贴板与二进制分片传输
 ```
+
+> 📖 **完整 API 接口定义、Wire Format 报文格式与 Header 规格详见 [API 接口文档 (docs/API.md)](./docs/API.md)**。
 
 ### 技术栈方案
 
@@ -99,11 +97,11 @@
 | 层级 | Electron 桌面端 (PC) | Tauri 桌面端 (PC-Lite) | 移动端 (App) |
 |------|---------------------|-----------------------|-------------|
 | **UI 框架** | Vue 3 + Element Plus | Vue 3 + Element Plus | Vue 3 + UniBest + UTS |
-| **运行平台** | Electron + Node.js | Tauri 2.0 (Rust) + WebView | iOS / Android 客户端 |
-| **数据通信** | TCP Socket / HTTP | TCP / HTTP (Rust 底层驱动) | TCP Socket / HTTP |
-| **安全加密** | Node.js `crypto` (AES/RSA) | Rust Crypto / SubtleCrypto | WebCrypto API / Polyfill |
+| **运行平台** | Electron + Node.js | Tauri 2.0 (Rust) + WebView | iOS / Android 原生 App |
+| **数据通信** | HTTP/1.1 REST API + UDP 探针 | HTTP/1.1 REST API + UDP 探针 | HTTP/1.1 REST API + UDP 探针 |
+| **安全加密** | X25519 + AES-256-GCM | X25519 + AES-256-GCM (Rust) | X25519 + AES-256-GCM (WebCrypto/UTS) |
 | **持久存储** | SQLite (better-sqlite3) | SQLite (Tauri Plugin) | SQLite (uni.openDatabase) |
-| **设备发现** | UDP 局域网组播 | UDP 局域网组播 (Rust 驱动) | UDP 局域网组播 |
+| **设备发现** | HTTP 扫盘探针 / UDP 广播 | HTTP 扫盘探针 / UDP 广播 (Rust) | HTTP 254 原生全并发扫盘 / UDP 原生探针 |
 
 ---
 
