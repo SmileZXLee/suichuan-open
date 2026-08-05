@@ -13,7 +13,7 @@
   <p align="center">
     <a href="https://suichuan.zxlee.cn">官方网站</a> · 
     <a href="https://suichuan.zxlee.cn/#download">软件下载</a> · 
-    <a href="./docs/README.md">开发文档</a> · 
+    <a href="./docs/API.md">开发文档</a> · 
     <a href="https://suichuan.zxlee.cn/feedback/">意见反馈</a>
   </p>
 </div>
@@ -30,9 +30,8 @@
 - [核心特性](#核心特性)
 - [平台支持](#平台支持)
 - [技术架构](#技术架构)
-  - [连接与安全握手流程](#连接与安全握手流程)
   - [分层与三端分工](#分层与三端分工)
-- [开发文档总览](#开发文档总览)
+- [开发文档](#开发文档)
 - [Monorepo 仓库结构](#monorepo-仓库结构)
 - [开源计划与路线图](#开源计划与路线图)
 - [参与贡献](#参与贡献)
@@ -79,24 +78,6 @@
 
 ## 技术架构
 
-### 连接与安全握手流程
-
-随传建立信任与传输数据的完整生命周期分为 4 个核心阶段：
-
-```mermaid
-flowchart LR
-    D["1. 设备发现<br/>(UDP 38890 广播 + HTTP 38888 探测)"] --> P["2. 配对绑定<br/>(POST /api/v1/pair 交换公钥协商密钥)"]
-    P --> A["3. 身份认证<br/>(POST /api/v1/auth 挑战应答校验 IP 变更)"]
-    A --> T["4. 加密传输<br/>(AES-256-GCM 端到端加密流转)"]
-```
-
-| 阶段 | 环节 | 说明 | 对应文档 |
-| :--- | :--- | :--- | :--- |
-| **1** | [设备发现](./docs/device-discovery.md) | UDP 38890 广播与 HTTP 38888 逐 IP 扫描双通道并行，智能筛选真实物理网卡并合并去重 | [`docs/device-discovery.md`](./docs/device-discovery.md) |
-| **2** | [配对绑定](./docs/device-pairing.md) | 发起 `POST /api/v1/pair`，对端弹窗确认后交换 X25519 公钥；双方各自经 ECDH 派生 TransportKey，公钥不在网络明文出库 | [`docs/device-pairing.md`](./docs/device-pairing.md) |
-| **3** | [身份认证](./docs/identity-auth.md) | 发起 `POST /api/v1/auth` 7 位随机串挑战，防止局域网攻击者冒充设备 ID 劫持流量 | [`docs/identity-auth.md`](./docs/identity-auth.md) |
-| **4** | [数据传输](./docs/data-transfer.md) | 承载消息、剪贴板与分片文件；单片 (`X-Chunk-Sha256`) 与全文件 (`X-File-Sha256`) 双重哈希校验，支持断点续传 | [`docs/data-transfer.md`](./docs/data-transfer.md) |
-
 ### 分层与三端分工
 
 项目采用严格的 4 层单向依赖架构，通信协议、加密算法、状态机与数据库 Schema 均下沉至 `packages/` 共享包，实现业务与平台彻底解耦：
@@ -118,19 +99,18 @@ flowchart TD
 
 ---
 
-## 开发文档总览
+## 开发文档
 
 随传包含完整的规范与设计文档，存放于 [`docs/`](./docs/) 目录：
 
 | 文档 | 说明 | 重点覆盖内容 |
 | :--- | :--- | :--- |
-| 📖 [开发文档主页](./docs/README.md) | 总体索引与维护约定 | 推荐阅读顺序、文档定位与维护规范 |
-| 📑 [API 接口文档](./docs/API.md) | 设备间 HTTP / UDP 规范 | 路径、请求头、统一响应信封、错误码表、UDP 报文 |
-| 🔍 [局域网设备发现](./docs/device-discovery.md) | 广播与扫描机制 | 双通道扫描、网卡筛选、心跳在线判定、IP 跟随流程 |
-| 🤝 [设备配对与绑定](./docs/device-pairing.md) | 信任建立与密钥协商 | X25519 ECDH 协商、三种连接入口、IP 冲突处理、解绑与黑名单 |
-| 🛡️ [设备身份认证](./docs/identity-auth.md) | 安全防御机制 | 挑战-应答协议、AES-GCM 证明解密与三重比对、失败语义 |
-| 📦 [数据传输](./docs/data-transfer.md) | 消息/剪贴板/文件传输 | 端到端加密线格式、聊天自毁、剪贴板回环抑制、4 MiB 分片与续传、网页提取码 |
-| 📐 [设计规范与工程约定](./docs/conventions.md) | 代码规范与跨端约定 | 4 层依赖方向、Fail-closed 原则、死锁防护、三端平台注意事项 |
+| [API 接口文档](./docs/API.md) | 设备间 HTTP / UDP 通信协议与接口定义 | 统一响应信封、通用请求头、端到端加密格式、错误码表、UDP 广播报文 |
+| [局域网设备发现](./docs/device-discovery.md) | 局域网设备发现与在线状态管理 | UDP 广播与 HTTP 双通道扫描、真实网卡筛选、IP 自动跟随与身份验证触发、心跳在线状态判定 |
+| [设备配对与绑定](./docs/device-pairing.md) | 设备配对与密钥协商机制 | X25519 ECDH 密钥协商、三种连接入口（扫描/扫码/手动 IP）、IP 冲突处理、解绑与黑名单 |
+| [设备身份认证](./docs/identity-auth.md) | 设备身份防冒充认证机制 | 基于会话密钥的 7 位随机串挑战-应答、AES-256-GCM 密文证明与三重比对 (nonce/ip/deviceId)、失败处理语义 |
+| [数据传输](./docs/data-transfer.md) | 消息、剪贴板与文件传输机制 | 消息气泡与阅后即焚、剪贴板自动同步与回环抑制、4 MiB 分片与断点续传、网页提取码免安装分享 |
+| [设计规范与工程约定](./docs/conventions.md) | 架构分层规范与跨端工程约定 | 4 层单向依赖规则、Fail-closed 原则、死锁防护、KV 设置项规范、三端平台实现差异 |
 
 推荐阅读顺序：**[设备发现](./docs/device-discovery.md) → [配对绑定](./docs/device-pairing.md) → [身份认证](./docs/identity-auth.md) → [数据传输](./docs/data-transfer.md)**。
 
